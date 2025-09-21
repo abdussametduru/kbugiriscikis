@@ -5,34 +5,81 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Giriş-Çıkış Takip</title>
 <style>
-body { font-family: Arial; padding:20px; margin:0; background:#f9f9f9; }
-h1 { color:#333; font-size:1.8em; text-align:center; }
-button { width:80%; max-width:300px; padding:15px; margin:10px auto; font-size:18px; border:none; border-radius:8px; cursor:pointer; transition:0.3s; display:block; }
-#girisBtn { background-color:#4CAF50; color:white; }
-#cikisBtn { background-color:#f44336; color:white; }
-button:disabled { background:#ccc; color:#666; cursor:not-allowed; }
-#girisInfo, #cikisInfo, #sureInfo { margin-top:15px; font-size:1.1em; word-wrap:break-word; text-align:center; }
-#sureInfo { font-weight:bold; color:#222; margin-top:20px; font-size:1.2em; }
-#logToggleBtn { position:fixed; top:10px; right:10px; padding:10px 15px; background:#FF9800; color:white; border:none; border-radius:8px; cursor:pointer; z-index:1000; }
-#loglar { 
-    display:none; 
-    margin-top:25px; 
-    text-align:left; 
-    max-width:300px; 
-    margin-left:auto; 
-    margin-right:auto; 
-    background:#fff; 
-    padding:8px; 
-    border-radius:8px; 
-    box-shadow:0 2px 5px rgba(0,0,0,0.1); 
-    font-size:0.9em; 
-    max-height:400px; 
-    overflow-y:auto; 
+body {
+    font-family: Arial, sans-serif;
+    padding: 20px;
+    margin: 0;
+    background: #f9f9f9;
 }
+h1 {
+    color: #333;
+    font-size: 1.8em;
+    text-align: center;
+    margin-bottom: 20px;
+}
+button {
+    width: 90%;
+    max-width: 350px;
+    padding: 16px;
+    margin: 10px auto;
+    font-size: 18px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: 0.3s;
+    display: block;
+}
+#girisBtn { background-color: #4CAF50; color: white; }
+#cikisBtn { background-color: #f44336; color: white; }
+button:disabled { background: #ccc; color: #666; cursor: not-allowed; }
+
+#girisInfo, #cikisInfo, #sureInfo {
+    margin-top: 15px;
+    font-size: 1.1em;
+    word-wrap: break-word;
+    text-align: center;
+}
+#sureInfo { font-weight: bold; color: #222; margin-top: 20px; font-size: 1.2em; }
+
+#logToggleBtn {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    padding: 10px 15px;
+    background: #FF9800;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    z-index: 1000;
+    font-size: 0.9em;
+}
+
+#loglar { 
+    display: none; 
+    margin-top: 25px; 
+    text-align: left; 
+    max-width: 350px; 
+    margin-left: auto; 
+    margin-right: auto; 
+    background: #fff; 
+    padding: 10px; 
+    border-radius: 10px; 
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1); 
+    font-size: 0.9em; 
+    max-height: 400px; 
+    overflow-y: auto; 
+}
+
 .logEntry { 
-    border-bottom:1px solid #eee; 
-    padding:3px 0; 
-    font-size:0.9em; 
+    border-bottom: 1px solid #eee; 
+    padding: 5px 0; 
+    font-size: 0.9em; 
+}
+
+@media (max-width: 480px) {
+    button { font-size: 16px; padding: 14px; }
+    #logToggleBtn { font-size: 0.8em; padding: 8px 12px; }
 }
 </style>
 </head>
