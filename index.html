@@ -3,250 +3,133 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Giriş-Çıkış Takip</title>
+<title>Kullanıcı Bazlı Giriş-Çıkış</title>
 <style>
-body {
-    font-family: Arial, sans-serif;
-    padding: 20px;
-    margin: 0;
-    background: #f9f9f9;
-}
-h1 {
-    color: #333;
-    font-size: 1.8em;
-    text-align: center;
-    margin-bottom: 20px;
-}
-button {
-    width: 90%;
-    max-width: 350px;
-    padding: 16px;
-    margin: 10px auto;
-    font-size: 18px;
-    border: none;
-    border-radius: 10px;
-    cursor: pointer;
-    transition: 0.3s;
-    display: block;
-}
-#girisBtn { background-color: #4CAF50; color: white; }
-#cikisBtn { background-color: #f44336; color: white; }
-button:disabled { background: #ccc; color: #666; cursor: not-allowed; }
-
-#girisInfo, #cikisInfo, #sureInfo {
-    margin-top: 15px;
-    font-size: 1.1em;
-    word-wrap: break-word;
-    text-align: center;
-}
-#sureInfo { font-weight: bold; color: #222; margin-top: 20px; font-size: 1.2em; }
-
-#logToggleBtn {
-    position: fixed;
-    top: 10px;
-    right: 10px;
-    padding: 10px 15px;
-    background: #FF9800;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    z-index: 1000;
-    font-size: 0.9em;
-}
-
-#loglar { 
-    display: none; 
-    margin-top: 25px; 
-    text-align: left; 
-    max-width: 350px; 
-    margin-left: auto; 
-    margin-right: auto; 
-    background: #fff; 
-    padding: 10px; 
-    border-radius: 10px; 
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1); 
-    font-size: 0.9em; 
-    max-height: 400px; 
-    overflow-y: auto; 
-}
-
-.logEntry { 
-    border-bottom: 1px solid #eee; 
-    padding: 5px 0; 
-    font-size: 0.9em; 
-}
-
-@media (max-width: 480px) {
-    button { font-size: 16px; padding: 14px; }
-    #logToggleBtn { font-size: 0.8em; padding: 8px 12px; }
-}
+body { font-family: Arial, sans-serif; padding: 20px; background: #f9f9f9; }
+h1 { text-align:center; color:#333; margin-bottom:20px; }
+.kullanici-container { width:90%; max-width:500px; margin:15px auto; padding:10px; border:1px solid #ccc; border-radius:10px; background:#fff; }
+.kullanici-container h2 { text-align:center; margin:5px 0; }
+button { width:45%; padding:12px; margin:5px 2%; font-size:16px; border:none; border-radius:8px; cursor:pointer; }
+button:disabled { background:#ccc; color:#666; cursor:not-allowed; }
+.girisBtn { background-color:#4CAF50; color:white; }
+.cikisBtn { background-color:#f44336; color:white; }
+table { width:90%; max-width:500px; margin:20px auto; border-collapse: collapse; }
+th, td { border:1px solid #ccc; padding:8px; text-align:center; }
+th { background-color:#eee; }
+.renk-yesil { background-color:#c8e6c9; }  /* Girişler */
+.renk-kirmizi { background-color:#ffcdd2; } /* Çıkışlar */
+#calismaSuresi { width:90%; max-width:500px; margin:20px auto; padding:10px; background:#e0e0e0; border-radius:8px; text-align:center; font-weight:bold; }
+@media(max-width:480px){ button { font-size:14px; padding:10px; } table { font-size:14px; } }
 </style>
 </head>
 <body>
-<h1>Giriş-Çıkış Takip</h1>
+<h1>Kullanıcı Bazlı Giriş-Çıkış</h1>
 
-<button id="girisBtn">Giriş Yapıldı</button>
-<button id="cikisBtn">Çıkış Yapıldı</button>
-
-<p id="girisInfo"></p>
-<p id="cikisInfo"></p>
-<p id="sureInfo"></p>
-
-<button id="logToggleBtn">Geçmiş Kayıtlar</button>
-<div id="loglar"></div>
+<div id="butonContainer"></div>
+<div id="tabloContainer"></div>
+<div id="calismaSuresi"></div>
 
 <script>
-const izinliKullanicilar = ['ibrahimarslan', 'fatihünal', 'sametduru'];
-const girisBtn = document.getElementById('girisBtn');
-const cikisBtn = document.getElementById('cikisBtn');
-const girisInfo = document.getElementById('girisInfo');
-const cikisInfo = document.getElementById('cikisInfo');
-const sureInfo = document.getElementById('sureInfo');
-const loglarDiv = document.getElementById('loglar');
-const logToggleBtn = document.getElementById('logToggleBtn');
+const kullanicilar = ['sametduru','ibrahimarslan','fatihünal'];
+let loglar = JSON.parse(localStorage.getItem('loglar')||'[]');
 
-function formatTarih(date){
-    const gun = String(date.getDate()).padStart(2,'0');
-    const ay = String(date.getMonth()+1).padStart(2,'0');
-    const yil = date.getFullYear();
-    return `${gun}.${ay}.${yil}`;
+function baslangicLog(){
+    if(loglar.length===0){
+        const now = new Date();
+        const tarih = now.toLocaleDateString();
+        kullanicilar.forEach(k=>{
+            loglar.push({kullanici:k, tarih, girisSaati:'-', cikisSaati:'-', girisRenk:false, cikisRenk:false});
+        });
+        localStorage.setItem('loglar',JSON.stringify(loglar));
+    }
 }
-
-function farkSaatDakikaSaniye(giris, cikis){
-    let farkMs = cikis - giris;
-    let farkSaniyeToplam = Math.floor(farkMs / 1000);
-    let saat = Math.floor(farkSaniyeToplam / 3600);
-    let dakika = Math.floor((farkSaniyeToplam % 3600) / 60);
-    let saniye = farkSaniyeToplam % 60;
-    return `${saat} saat ${dakika} dakika ${saniye} saniye`;
-}
+baslangicLog();
 
 function logGoster(){
-    const loglar = JSON.parse(localStorage.getItem('loglar') || '[]');
-    loglarDiv.innerHTML = '';
-    if(loglar.length === 0){
-        loglarDiv.textContent = 'Henüz geçmiş kayıt yok.';
-        return;
-    }
-    loglar.forEach(entry => {
-        const div = document.createElement('div');
-        div.className = 'logEntry';
-        let sure = '';
-        if(entry.girisSaati && entry.cikisSaati){
-            const giris = new Date('1970-01-01T' + entry.girisSaati);
-            const cikis = new Date('1970-01-01T' + entry.cikisSaati);
-            sure = ` | Çalışma süresi: ${farkSaatDakikaSaniye(giris,cikis)}`;
-        }
-        div.innerHTML = `<strong>${entry.tarih}</strong> - Giriş: ${entry.girisKullanici} ${entry.girisSaati || '-'} | Çıkış: ${entry.cikisKullanici || '-'} ${entry.cikisSaati || '-'}${sure}`;
-        loglarDiv.appendChild(div);
+    const container = document.getElementById('tabloContainer');
+    container.innerHTML='';
+    const calismaDiv = document.getElementById('calismaSuresi');
+    calismaDiv.innerHTML='';
+
+    kullanicilar.forEach(k=>{
+        const userLogs = loglar.filter(l=>l.kullanici===k);
+        const table = document.createElement('table');
+        table.innerHTML = `<thead><tr><th>Tarih</th><th>Kullanıcı</th><th>Giriş</th><th>Çıkış</th></tr></thead>`;
+        const tbody = document.createElement('tbody');
+
+        userLogs.forEach(l=>{
+            const tr = document.createElement('tr');
+            const girisTd = document.createElement('td');
+            girisTd.textContent = l.girisSaati;
+            if(l.girisRenk) girisTd.className='renk-yesil';
+            const cikisTd = document.createElement('td');
+            cikisTd.textContent = l.cikisSaati;
+            if(l.cikisRenk) cikisTd.className='renk-kirmizi';
+            tr.innerHTML = `<td>${l.tarih}</td><td>${k}</td>`;
+            tr.appendChild(girisTd);
+            tr.appendChild(cikisTd);
+            tbody.appendChild(tr);
+        });
+
+        table.appendChild(tbody);
+        container.appendChild(table);
     });
 }
 
-// Geçmiş kayıt butonu toggle
-logToggleBtn.addEventListener('click', () => {
-    if(loglarDiv.style.display === 'none'){
-        loglarDiv.style.display = 'block';
+const butonContainer = document.getElementById('butonContainer');
+kullanicilar.forEach(k=>{
+    const div = document.createElement('div');
+    div.className='kullanici-container';
+    div.innerHTML = `<h2>${k}</h2>
+    <button class="girisBtn">Giriş Yapıldı</button>
+    <button class="cikisBtn">Çıkış Yapıldı</button>`;
+    butonContainer.appendChild(div);
+
+    const girisBtn = div.querySelector('.girisBtn');
+    const cikisBtn = div.querySelector('.cikisBtn');
+
+    girisBtn.addEventListener('click', ()=>{
+        const kayit = loglar.find(l=>l.kullanici===k);
+        if(kayit.girisRenk){ alert('Zaten giriş yaptınız!'); return; }
+        const now = new Date();
+        kayit.girisSaati = now.toLocaleTimeString();
+        kayit.girisRenk = true;
+        localStorage.setItem('loglar',JSON.stringify(loglar));
         logGoster();
-    } else {
-        loglarDiv.style.display = 'none';
-    }
-});
+    });
 
-// Bugünün tarihi
-const bugun = formatTarih(new Date());
+    cikisBtn.addEventListener('click', ()=>{
+        const kayit = loglar.find(l=>l.kullanici===k);
+        if(!kayit.girisRenk){ alert('Giriş yapmadan çıkış yapamazsınız!'); return; }
+        if(kayit.cikisRenk){ alert('Zaten çıkış yaptınız!'); return; }
+        const now = new Date();
+        kayit.cikisSaati = now.toLocaleTimeString();
+        kayit.cikisRenk = true;
+        localStorage.setItem('loglar',JSON.stringify(loglar));
+        logGoster();
 
-// Günlük otomatik sıfırlama (sadece bugünün kayıtları)
-const kayitTarih = localStorage.getItem('kayitTarih');
-if(kayitTarih !== bugun){
-    localStorage.setItem('girisSaati','');
-    localStorage.setItem('girisKullanici','');
-    localStorage.setItem('girisTarih','');
-    localStorage.setItem('cikisSaati','');
-    localStorage.setItem('cikisKullanici','');
-    localStorage.setItem('cikisTarih','');
-    localStorage.setItem('kayitTarih', bugun);
-}
+        const tumCikisYapti = loglar.every(l=>l.cikisRenk);
+        if(tumCikisYapti){
+            const girisler = loglar.map(l=>l.girisSaati.split(':').map(Number));
+            const cikislar = loglar.map(l=>l.cikisSaati.split(':').map(Number));
+            const ilkGiris = new Date(0,0,0,girisler[0][0],girisler[0][1],girisler[0][2]||0);
+            const sonCikis = new Date(0,0,0,cikislar[cikislar.length-1][0],cikislar[cikislar.length-1][1],cikislar[cikislar.length-1][2]||0);
+            let fark = (sonCikis-ilkGiris)/1000;
+            if(fark<0) fark=0;
+            const h = Math.floor(fark/3600);
+            const m = Math.floor((fark%3600)/60);
+            const s = Math.floor(fark%60);
+            document.getElementById('calismaSuresi').textContent = `Toplam Çalışma Süresi: ${h} saat ${m} dakika ${s} saniye`;
 
-// Mevcut kayıtları yükle
-const girisSaati = localStorage.getItem('girisSaati');
-const cikisSaati = localStorage.getItem('cikisSaati');
-
-if(girisSaati) {
-    girisBtn.disabled = true;
-    girisInfo.textContent = `${localStorage.getItem('girisKullanici')} giriş yaptı. Tarih: ${localStorage.getItem('girisTarih')} Saat: ${girisSaati}`;
-}
-if(cikisSaati) {
-    cikisBtn.disabled = true;
-    cikisInfo.textContent = `${localStorage.getItem('cikisKullanici')} çıkış yaptı. Tarih: ${localStorage.getItem('cikisTarih')} Saat: ${cikisSaati}`;
-    const giris = new Date('1970-01-01T' + localStorage.getItem('girisSaati'));
-    const cikis = new Date('1970-01-01T' + cikisSaati);
-    sureInfo.textContent = `Toplam çalışma süresi: ${farkSaatDakikaSaniye(giris,cikis)}`;
-}
-
-// Giriş butonu
-girisBtn.addEventListener('click', () => {
-    const kullanici = prompt('Kullanıcı adınızı girin:');
-    if(!izinliKullanicilar.includes(kullanici)){
-        alert('Bu kullanıcı giriş yapamaz!');
-        return;
-    }
-    const now = new Date();
-    const saat = now.toLocaleTimeString();
-    const tarih = formatTarih(now);
-
-    localStorage.setItem('girisSaati', saat);
-    localStorage.setItem('girisKullanici', kullanici);
-    localStorage.setItem('girisTarih', tarih);
-    localStorage.setItem('kayitTarih', bugun);
-    girisBtn.disabled = true;
-    girisInfo.textContent = `${kullanici} giriş yaptı. Tarih: ${tarih} Saat: ${saat}`;
-
-    let loglar = JSON.parse(localStorage.getItem('loglar') || '[]');
-    loglar.push({ tarih, girisKullanici: kullanici, girisSaati: saat, cikisKullanici:'', cikisSaati:'' });
-    localStorage.setItem('loglar', JSON.stringify(loglar));
-    if(loglarDiv.style.display === 'block') logGoster();
-});
-
-// Çıkış butonu
-cikisBtn.addEventListener('click', () => {
-    const girisSaati = localStorage.getItem('girisSaati');
-    if(!girisSaati){
-        alert('Önce giriş yapmalısınız!');
-        return;
-    }
-    const cikisKullanici = prompt('Çıkış yapan kullanıcı adını girin:');
-    if(!izinliKullanicilar.includes(cikisKullanici)){
-        alert('Bu kullanıcı çıkış yapamaz!');
-        return;
-    }
-    const now = new Date();
-    const saat = now.toLocaleTimeString();
-    const tarih = formatTarih(now);
-
-    localStorage.setItem('cikisSaati', saat);
-    localStorage.setItem('cikisKullanici', cikisKullanici);
-    localStorage.setItem('cikisTarih', tarih);
-    cikisBtn.disabled = true;
-    cikisInfo.textContent = `${cikisKullanici} çıkış yaptı. Tarih: ${tarih} Saat: ${saat}`;
-
-    const giris = new Date('1970-01-01T' + localStorage.getItem('girisSaati'));
-    const cikis = new Date('1970-01-01T' + saat);
-    sureInfo.textContent = `Toplam çalışma süresi: ${farkSaatDakikaSaniye(giris,cikis)}`;
-
-    let loglar = JSON.parse(localStorage.getItem('loglar') || '[]');
-    for(let i=loglar.length-1; i>=0; i--){
-        if(loglar[i].tarih === tarih && loglar[i].cikisSaati===''){
-            loglar[i].cikisKullanici = cikisKullanici;
-            loglar[i].cikisSaati = saat;
-            break;
+            // Yayın sürümü: 4 saat sonra sayfa yenileniyor
+            setTimeout(()=>{
+                localStorage.removeItem('loglar');
+                location.reload();
+            }, 4*60*60*1000); // 4 saat = 14400000 ms
         }
-    }
-    localStorage.setItem('loglar', JSON.stringify(loglar));
-    if(loglarDiv.style.display === 'block') logGoster();
+    });
 });
 
-// Sayfa açıldığında logları hazırla (gizli)
 logGoster();
 </script>
 </body>
